@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* PingRank Design System — migrado do Figma Make */
+
+@layer base {
+  :root {
+    /* Light Mode */
+    --background: #F8FAFC;
+    --surface: #FFFFFF;
+    --surface-elevated: #F1F5F9;
+
+    --foreground: #0F172A;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #64748B;
+
+    /* Accent — Electric Green */
+    --accent-primary: #22C55E;
+    --accent-primary-hover: #16A34A;
+    --accent-primary-foreground: #FFFFFF;
+
+    /* Status */
+    --success: #22C55E;
+    --success-foreground: #FFFFFF;
+    --danger: #EF4444;
+    --danger-foreground: #FFFFFF;
+    --warning: #F59E0B;
+    --warning-foreground: #FFFFFF;
+
+    /* UI */
+    --border: #E2E8F0;
+    --input-border: #CBD5E1;
+    --input-background: #FFFFFF;
+    --input-focus-ring: #22C55E;
+    --card: #FFFFFF;
+    --card-foreground: #0F172A;
+
+    /* Typography */
+    --font-heading: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'Space Grotesk', monospace;
+  }
+
+  .dark {
+    /* Dark Mode */
+    --background: #0F172A;
+    --surface: #1E293B;
+    --surface-elevated: #334155;
+
+    --foreground: #F8FAFC;
+    --text-primary: #F8FAFC;
+    --text-secondary: #CBD5E1;
+    --text-muted: #94A3B8;
+
+    --accent-primary: #22C55E;
+    --accent-primary-hover: #16A34A;
+    --accent-primary-foreground: #FFFFFF;
+
+    --success: #22C55E;
+    --danger: #EF4444;
+    --warning: #F59E0B;
+
+    --border: #334155;
+    --input-border: #475569;
+    --input-background: #1E293B;
+    --input-focus-ring: #22C55E;
+    --card: #1E293B;
+    --card-foreground: #F8FAFC;
+  }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-body);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+
+  h1 { font-size: 2rem; font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; }
+  h2 { font-size: 1.5rem; font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; }
+  h3 { font-size: 1.25rem; font-weight: 700; line-height: 1.4; }
+  h4 { font-size: 1rem; font-weight: 600; line-height: 1.5; }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .font-mono-num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+}
