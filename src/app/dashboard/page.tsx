@@ -7,9 +7,9 @@ import { GroupCard } from '@/components/groups'
 
 // TODO: substituir por useQuery(() => api.get('/players/me/groups'))
 const mockGroups = [
-  { id: '1', name: 'Escritório SP', memberCount: 12, userPosition: 2, userElo: 1847 },
-  { id: '2', name: 'Time de Engenharia', memberCount: 8, userPosition: 1, userElo: 1923 },
-  { id: '3', name: 'Design Squad', memberCount: 6, userPosition: 4, userElo: 1654 },
+  { id: '1', name: 'Inovação', memberCount: 12, userPosition: 2, userElo: 1847 },
+  { id: '2', name: 'CALL', memberCount: 8, userPosition: 1, userElo: 1923 },
+  { id: '3', name: 'IFsul', memberCount: 6, userPosition: 4, userElo: 1654 },
 ]
 
 export default function DashboardPage() {
@@ -30,7 +30,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Groups */}
-      <div className="px-6 py-6 space-y-4">
+      <div className="flex flex-col gap-3 px-6 py-6">
         {mockGroups.map((group) => (
           <GroupCard key={group.id} {...group} />
         ))}

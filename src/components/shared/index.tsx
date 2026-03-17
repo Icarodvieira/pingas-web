@@ -136,7 +136,7 @@ export function BottomNav() {
 
   const navItems = [
     { href: '/dashboard', icon: Home, label: 'Grupos' },
-    { href: '/groups', icon: Trophy, label: 'Rankings' },
+    // { href: '/groups', icon: Trophy, label: 'Rankings' },
     { href: '/profile', icon: User, label: 'Perfil' },
   ]
 

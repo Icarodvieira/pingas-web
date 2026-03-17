@@ -9,7 +9,7 @@ import { RankingRow } from '@/components/groups'
 type Period = 'Semana' | 'Mês' | 'Geral'
 
 // TODO: substituir por useQuery(() => api.get(`/groups/${id}`))
-const mockGroup = { name: 'Escritório SP', memberCount: 12 }
+const mockGroup = { name: 'Inovação', memberCount: 12 }
 
 // TODO: substituir por useQuery(() => api.get(`/groups/${id}/ranking?period=${period}`))
 const mockRankings = [

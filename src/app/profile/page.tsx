@@ -18,9 +18,9 @@ const playerStats = {
 
 // TODO: substituir por useQuery(() => api.get('/players/me/groups'))
 const playerGroups = [
-  { id: '1', name: 'Escritório SP',       elo: 1847, position: 2, memberCount: 12 },
-  { id: '2', name: 'Time de Engenharia',  elo: 1923, position: 1, memberCount: 8 },
-  { id: '3', name: 'Design Squad',        elo: 1654, position: 4, memberCount: 6 },
+  { id: '1', name: 'Inovação',       elo: 1847, position: 2, memberCount: 12 },
+  { id: '2', name: 'CALL',  elo: 1923, position: 1, memberCount: 8 },
+  { id: '3', name: 'IFsul',        elo: 1654, position: 4, memberCount: 6 },
 ]
 
 // TODO: substituir por useQuery(() => api.get('/players/me/matches?limit=5'))
@@ -117,7 +117,7 @@ export default function ProfilePage() {
       {/* Meus grupos */}
       <div className="px-6 py-6">
         <h3 className="text-sm font-semibold text-text-muted mb-4 uppercase tracking-wide">Meus Grupos</h3>
-        <div className="space-y-3">
+        <div className="flex flex-col gap-2">
           {playerGroups.map((group) => (
             <Link key={group.id} href={`/groups/${group.id}`}>
               <div className="bg-surface rounded-xl p-4 hover:bg-surface-elevated transition-all">
@@ -140,7 +140,7 @@ export default function ProfilePage() {
       {/* Histórico recente */}
       <div className="px-6 pb-6">
         <h3 className="text-sm font-semibold text-text-muted mb-4 uppercase tracking-wide">Histórico Recente</h3>
-        <div className="space-y-3">
+        <div className="flex flex-col gap-2">
           {recentMatches.map((match, i) => (
             <div key={i} className="bg-surface rounded-xl p-4 hover:bg-surface-elevated transition-all">
               <div className="flex items-center gap-4">
