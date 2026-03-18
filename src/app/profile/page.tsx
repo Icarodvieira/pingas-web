@@ -143,7 +143,7 @@ export default function ProfilePage() {
         <div className="flex flex-col gap-2">
           {recentMatches.map((match, i) => (
             <div key={i} className="bg-surface rounded-xl p-4 hover:bg-surface-elevated transition-all">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 {/* Opponent avatar */}
                 <div className="w-10 h-10 rounded-full bg-accent-primary/20 flex items-center justify-center flex-shrink-0">
                   <span className="text-accent-primary font-bold text-xs">{getInitials(match.opponent)}</span>
@@ -154,19 +154,26 @@ export default function ProfilePage() {
                   <p className="font-semibold text-foreground truncate">{match.opponent}</p>
                   <p className="text-xs text-text-muted">{match.date}</p>
                 </div>
-
                 {/* Score */}
-                <p className="font-mono font-semibold text-foreground">{match.score}</p>
+                <p className="w-14 text-center font-mono font-semibold text-foreground flex-shrink-0">
+                  {match.score}
+                </p>
 
-                {/* Badge + ELO */}
-                <div className="flex flex-col items-end gap-1">
+                {/* Badge */}
+                <div className="w-7 flex justify-center flex-shrink-0">
                   <Badge variant={match.result}>
                     {match.result === 'win' ? 'V' : match.result === 'loss' ? 'D' : 'E'}
                   </Badge>
-                  <p className={`text-xs font-bold font-mono ${match.eloChange > 0 ? 'text-success' : match.eloChange < 0 ? 'text-danger' : 'text-text-muted'}`}>
-                    {match.eloChange > 0 ? '+' : ''}{match.eloChange}
-                  </p>
                 </div>
+
+                {/* ELO */}
+                <p className={`w-10 text-center text-xs font-bold font-mono flex-shrink-0 ${
+                  match.eloChange > 0 ? 'text-success' :
+                  match.eloChange < 0 ? 'text-danger' :
+                  'text-text-muted'
+                }`}>
+                  {match.eloChange > 0 ? '+' : ''}{match.eloChange}
+                </p>
               </div>
             </div>
           ))}
