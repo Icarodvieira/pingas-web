@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Input, PrimaryButton, ThemeToggle } from '@/components/shared'
+import { api } from '@/lib/api'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -11,16 +12,27 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
+    setError(null)
     try {
-      // TODO: integrar com POST /api/auth/login ou /api/auth/register
-      // const { data } = await api.post(isRegister ? '/auth/register' : '/auth/login', { email, password, name })
-      // localStorage.setItem('token', data.token)
+      const endpoint = isRegister ? '/auth/register' : '/auth/login'
+      const payload = isRegister ? { email, password, name } : { email, password }
+      const { data } = await api.post(endpoint, payload)
+      localStorage.setItem('token', data.token)
+          
       router.push('/dashboard')
-    } finally {
+    } catch (err: any) {
+      if (!err.response) {
+        setError('Não foi possível conectar ao servidor. Tente mais tarde.')
+      } else {
+        setError(err.response?.data?.error || 'Ocorreu um erro. Tente novamente.')
+      }
+    }
+    finally {
       setLoading(false)
     }
   }
@@ -72,6 +84,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            {error && <p className="text-red-500 text-sm">{error}</p>}
             <div className="pt-2">
               <PrimaryButton type="submit" fullWidth size="lg" disabled={loading}>
                 {loading ? 'Aguarde...' : isRegister ? 'Criar conta' : 'Entrar'}
@@ -82,7 +95,10 @@ export default function LoginPage() {
           <div className="mt-6 text-center">
             <button
               type="button"
-              onClick={() => setIsRegister(!isRegister)}
+              onClick={() => {
+                setIsRegister(!isRegister)
+                setError(null)
+              }}
               className="text-accent-primary hover:underline font-semibold"
             >
               {isRegister ? 'Já tem uma conta? Entrar' : 'Não tem uma conta? Criar conta'}
