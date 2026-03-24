@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { BottomNav, FAB, ThemeToggle, Input, PrimaryButton } from '@/components/shared'
 import { GroupCard } from '@/components/groups'
+import { api } from '@/lib/api'
 
 // TODO: substituir por useQuery(() => api.get('/players/me/groups'))
 const mockGroups = [
@@ -17,6 +18,19 @@ export default function DashboardPage() {
   const [modalTab, setModalTab] = useState<'create' | 'join'>('create')
   const [groupName, setGroupName] = useState('')
   const [inviteCode, setInviteCode] = useState('')
+
+  const handleCreateGroup = async () => {
+    const trimmedGroupName = groupName.trim()
+    if (!trimmedGroupName) return
+
+    try {
+      await api.post('/groups', { name: trimmedGroupName })
+      setGroupName('')
+      setShowModal(false)
+    } catch (error) {
+      console.error('Failed to create group', error)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -72,8 +86,7 @@ export default function DashboardPage() {
             {modalTab === 'create' ? (
               <div className="space-y-4">
                 <Input label="Nome do grupo" placeholder="Ex: Time Labs" value={groupName} onChange={(e) => setGroupName(e.target.value)} />
-                <PrimaryButton fullWidth disabled={!groupName}>
-                  {/* TODO: api.post('/groups', { name: groupName }) */}
+                <PrimaryButton fullWidth disabled={!groupName.trim()} onClick={handleCreateGroup}>
                   Criar grupo
                 </PrimaryButton>
               </div>
