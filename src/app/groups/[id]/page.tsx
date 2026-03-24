@@ -2,26 +2,59 @@
 
 import { useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { BottomNav, FAB, ThemeToggle } from '@/components/shared'
 import { RankingRow } from '@/components/groups'
+import { api } from '@/lib/api'
 
 type Period = 'Semana' | 'Mês' | 'Geral'
 
-// TODO: substituir por useQuery(() => api.get(`/groups/${id}`))
-const mockGroup = { name: 'Inovação', memberCount: 12 }
+type GroupData = {
+  name: string
+  memberCount: number
+}
 
-// TODO: substituir por useQuery(() => api.get(`/groups/${id}/ranking?period=${period}`))
-const mockRankings = [
-  { position: 1, name: 'Pedro Rodrigues',   elo: 1923, wins: 15, losses: 3,  change: 12 },
-  { position: 2, name: 'Ícaro Vieira',  elo: 1847, wins: 12, losses: 5,  change: 8, isCurrentUser: true },
-  { position: 3, name: 'Ana Costa',     elo: 1782, wins: 11, losses: 6,  change: -5 },
-  { position: 4, name: 'Adriano Porto',   elo: 1654, wins: 8,  losses: 9,  change: 3 },
-  { position: 5, name: 'Matheus Leuck',  elo: 1598, wins: 7,  losses: 10, change: -12 },
-  { position: 6, name: 'Gabriel Mincaroni',    elo: 1523, wins: 6,  losses: 11, change: 0 },
-  { position: 7, name: 'Maria Souza',   elo: 1487, wins: 5,  losses: 12, change: -8 },
-  { position: 8, name: 'Lucas Alves',   elo: 1423, wins: 4,  losses: 13, change: -15 },
-]
+type RankingRowData = {
+  position: number
+  name: string
+  elo: number
+  wins: number
+  losses: number
+  change?: number
+  isCurrentUser?: boolean
+}
+
+function mapGroup(group: any): GroupData {
+  const members = Array.isArray(group?.members)
+    ? group.members
+    : Array.isArray(group?.players)
+      ? group.players
+      : []
+
+  return {
+    name: group?.name ?? 'Grupo',
+    memberCount: Number(group?.memberCount ?? members.length ?? 0),
+  }
+}
+
+function mapRankingRow(row: any, index: number, currentUserId?: number): RankingRowData | null {
+  const player = row?.player ?? row
+  const playerId = row?.playerId ?? player?.id ?? row?.id
+  const name = player?.name ?? row?.name
+
+  if (!name) return null
+
+  return {
+    position: Number(row?.position ?? index + 1),
+    name,
+    elo: Number(row?.eloRating ?? row?.elo ?? player?.eloRating ?? player?.elo ?? 0),
+    wins: Number(row?.wins ?? row?.totalWins ?? row?.stats?.totalWins ?? player?.stats?.totalWins ?? 0),
+    losses: Number(row?.losses ?? row?.totalLosses ?? row?.stats?.totalLosses ?? player?.stats?.totalLosses ?? 0),
+    change: Number(row?.change ?? row?.eloChange ?? row?.eloDelta ?? 0),
+    isCurrentUser: Boolean(row?.isCurrentUser) || (currentUserId !== undefined && Number(playerId) === currentUserId),
+  }
+}
 
 export default function GroupRankingPage() {
   const router = useRouter()
@@ -29,9 +62,56 @@ export default function GroupRankingPage() {
   const id = params.id as string
   const [period, setPeriod] = useState<Period>('Geral')
 
+  const { data: currentUserId } = useQuery<number | undefined>({
+    queryKey: ['auth-me'],
+    queryFn: async () => {
+      const response = await api.get('/auth/me')
+      return response.data?.player?.id
+    },
+  })
+
+  const {
+    data: group,
+    isLoading: isLoadingGroup,
+    isError: hasGroupError,
+  } = useQuery<GroupData>({
+    queryKey: ['group', id],
+    enabled: Boolean(id),
+    queryFn: async () => {
+      const response = await api.get(`/groups/${id}`)
+      const payload = response.data?.data ?? response.data
+      return mapGroup(payload)
+    },
+  })
+
+  const {
+    data: rankings = [],
+    isLoading: isLoadingRanking,
+    isError: hasRankingError,
+  } = useQuery<RankingRowData[]>({
+    queryKey: ['group-ranking', id, period, currentUserId],
+    enabled: Boolean(id),
+    queryFn: async () => {
+      const response = await api.get(`/groups/${id}/ranking`, {
+        params: { period },
+      })
+      const payload = response.data?.data ?? response.data
+      const rawRows = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.ranking)
+          ? payload.ranking
+          : Array.isArray(payload?.rows)
+            ? payload.rows
+            : []
+
+      return rawRows
+        .map((row: any, index: number) => mapRankingRow(row, index, currentUserId))
+        .filter((row: RankingRowData | null): row is RankingRowData => row !== null)
+    },
+  })
+
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
       <div className="bg-surface border-b-2 border-border px-6 py-4">
         <div className="flex items-center justify-between mb-4">
           <button
@@ -43,10 +123,15 @@ export default function GroupRankingPage() {
           <ThemeToggle />
         </div>
 
-        <h1 className="text-2xl font-bold text-foreground mb-1">{mockGroup.name}</h1>
-        <p className="text-sm text-text-muted">{mockGroup.memberCount} jogadores ativos</p>
-
-        {/* Period Filter */}
+        <h1 className="text-2xl font-bold text-foreground mb-1">
+          {isLoadingGroup ? 'Carregando...' : group?.name ?? 'Grupo'}
+        </h1>
+        <p className="text-sm text-text-muted">
+          {hasGroupError
+            ? 'Nao foi possivel carregar os dados do grupo'
+            : `${group?.memberCount ?? 0} jogadores ativos`}
+        </p>
+{/* 
         <div className="flex gap-2 mt-4">
           {(['Semana', 'Mês', 'Geral'] as Period[]).map((p) => (
             <button
@@ -61,17 +146,29 @@ export default function GroupRankingPage() {
               {p}
             </button>
           ))}
-        </div>
+        </div> */}
       </div>
 
-      {/* Ranking */}
       <div className="px-6 py-6 space-y-3">
-        {mockRankings.map((row) => (
-          <RankingRow key={row.position} {...row} />
-        ))}
+        {isLoadingRanking ? (
+          <div className="bg-surface rounded-xl p-4 text-sm text-text-muted">
+            Carregando ranking...
+          </div>
+        ) : hasRankingError ? (
+          <div className="bg-surface rounded-xl p-4 text-sm text-text-muted">
+            Nao foi possivel carregar o ranking.
+          </div>
+        ) : rankings.length > 0 ? (
+          rankings.map((row) => (
+            <RankingRow key={`${row.position}-${row.name}`} {...row} />
+          ))
+        ) : (
+          <div className="bg-surface rounded-xl p-4 text-sm text-text-muted">
+            Nenhum jogador encontrado neste ranking.
+          </div>
+        )}
       </div>
 
-      {/* FAB — Registrar partida */}
       <FAB
         onClick={() => router.push(`/groups/${id}/match`)}
         label="Registrar partida"

@@ -104,7 +104,7 @@ export default function ProfilePage() {
         <div className="flex items-center justify-between mt-2">
           <p className="text-xs text-text-muted">{eloHistory[0].date}</p>
           <p className="text-sm font-bold font-mono text-accent-primary">
-            ELO atual: {eloHistory[eloHistory.length - 1].elo}
+            {/* ELO atual: {eloHistory[eloHistory.length - 1].elo} */}
           </p>
           <p className="text-xs text-text-muted">{eloHistory[eloHistory.length - 1].date}</p>
         </div>
