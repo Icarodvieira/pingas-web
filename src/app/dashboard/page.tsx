@@ -31,6 +31,7 @@ interface GroupResponse {
 
 export default function DashboardPage() {
   const [playerId, setPlayerId] = useState<number | null>(null)
+  const [playerName, setPlayerName] = useState<string>('')
   const [groups, setGroups] = useState<Group[]>([])
   const [loading, setLoading] = useState(true)
   const [showModal, setShowModal] = useState(false)
@@ -42,10 +43,11 @@ export default function DashboardPage() {
   const [newGroupInviteCode, setNewGroupInviteCode] = useState('')
   const [copied, setCopied] = useState(false)
 
-  // Passo 1: Pega o ID do usuário logado
+  // Passo 1: Pega o ID e nome do usuário logado
   useEffect(() => {
     api.get('/auth/me').then((res) => {
       setPlayerId(res.data.player.id)
+      setPlayerName(res.data.player.name)
     })
   }, [])
 
@@ -130,7 +132,7 @@ export default function DashboardPage() {
           <h1 className="text-2xl font-bold text-foreground">Meus Grupos</h1>
           <ThemeToggle />
         </div>
-        <p className="text-text-muted">Olá! 👋</p>
+        <p className="text-text-muted">Olá, {playerName}! 👋</p>
       </div>
 
       {/* Error Message */}
