@@ -2,7 +2,7 @@
 
 import { TrendingUp, TrendingDown } from 'lucide-react'
 import { Badge } from '@/components/shared'
-import { getInitials } from '@/lib/utils'
+import { PlayerAvatar } from '@/components/shared/PlayerAvatar'
 
 // ─── MatchCard ────────────────────────────────────────────────────────────────
 interface MatchCardProps {
@@ -23,23 +23,13 @@ export function MatchCard({ player1Name, player1Avatar, player1Score, player1Elo
   const p2Won = player2Score > player1Score
   const isDraw = player1Score === player2Score
 
-  const Avatar = ({ name, url, size = 10 }: { name: string, url?: string, size?: number }) => (
-    url ? (
-      <img src={url} alt={name} className={`w-${size} h-${size} rounded-full object-cover`} />
-    ) : (
-      <div className={`w-${size} h-${size} rounded-full bg-accent-primary/20 flex items-center justify-center flex-shrink-0`}>
-        <span className="text-accent-primary font-bold text-xs">{getInitials(name)}</span>
-      </div>
-    )
-  )
-
   return (
     <div className="bg-surface rounded-xl p-4 hover:bg-surface-elevated transition-all overflow-hidden">
       <p className="text-xs text-text-muted mb-3">{date}</p>
       <div className="flex items-center justify-between gap-2 min-w-0">
         {/* Player 1 */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <Avatar name={player1Name} url={player1Avatar} />
+          <PlayerAvatar name={player1Name} avatarUrl={player1Avatar} size="sm" />
           <div className="min-w-0 flex-1">
             <p className={`font-semibold truncate text-sm ${p1Won ? 'text-success' : 'text-foreground'} ${currentUserName === player1Name ? 'underline' : ''}`}>
               {player1Name}
@@ -60,7 +50,7 @@ export function MatchCard({ player1Name, player1Avatar, player1Score, player1Elo
 
         {/* Player 2 */}
         <div className="flex items-center gap-2 flex-1 min-w-0 flex-row-reverse">
-          <Avatar name={player2Name} url={player2Avatar} />
+          <PlayerAvatar name={player2Name} avatarUrl={player2Avatar} size="sm" />
           <div className="min-w-0 flex-1 text-right">
             <p className={`font-semibold truncate text-sm ${p2Won ? 'text-success' : 'text-foreground'} ${currentUserName === player2Name ? 'underline' : ''}`}>
               {player2Name}
@@ -88,18 +78,11 @@ interface PlayerCardProps {
 }
 
 export function PlayerCard({ avatarUrl, name, elo, wins, losses, change, compact = false }: PlayerCardProps) {
-  const initials = getInitials(name)
 
   return (
     <div className={`flex items-center gap-3 ${compact ? '' : 'p-4 bg-surface rounded-xl'}`}>
       <div className="relative">
-        {avatarUrl ? (
-          <img src={avatarUrl} alt={name} className="w-12 h-12 rounded-full object-cover" />
-        ) : (
-          <div className="w-12 h-12 rounded-full bg-accent-primary/20 flex items-center justify-center">
-            <span className="text-accent-primary font-bold">{initials}</span>
-          </div>
-        )}
+        <PlayerAvatar name={name} avatarUrl={avatarUrl} size="sm" />
       </div>
 
       <div className="flex-1 min-w-0">

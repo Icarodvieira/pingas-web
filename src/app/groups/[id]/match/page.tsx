@@ -23,9 +23,11 @@ type Member = {
 type RecentMatch = {
   id: string
   player1Name: string
+  player1Avatar?: string | null
   player1Score: number
   player1EloChange: number
   player2Name: string
+  player2Avatar?: string | null
   player2Score: number
   player2EloChange: number
   date: string
@@ -96,9 +98,11 @@ function mapRecentMatch(match: any, index: number): RecentMatch | null {
   return {
     id: String(match?.id ?? `${match?.playedAt ?? 'match'}-${index}`),
     player1Name,
+    player1Avatar: match?.player1?.avatarUrl ?? match?.player1Avatar ?? null,
     player1Score: Number(match?.scoreP1 ?? match?.player1Score ?? 0),
     player1EloChange: Number(match?.eloChangeP1 ?? match?.player1EloChange ?? 0),
     player2Name,
+    player2Avatar: match?.player2?.avatarUrl ?? match?.player2Avatar ?? null,
     player2Score: Number(match?.scoreP2 ?? match?.player2Score ?? 0),
     player2EloChange: Number(match?.eloChangeP2 ?? match?.player2EloChange ?? 0),
     date: formatMatchDate(match?.playedAt ?? match?.date),

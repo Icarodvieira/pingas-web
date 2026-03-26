@@ -18,6 +18,7 @@ type GroupData = {
 type RankingRowData = {
   position: number
   name: string
+  avatarUrl?: string
   elo: number
   wins: number
   losses: number
@@ -48,11 +49,12 @@ function mapRankingRow(row: any, index: number, currentUserId?: number): Ranking
   return {
     position: Number(row?.position ?? index + 1),
     name,
+    avatarUrl: player?.avatarUrl ?? row?.avatarUrl,
     elo: Number(row?.eloRating ?? row?.elo ?? player?.eloRating ?? player?.elo ?? 0),
     wins: Number(row?.wins ?? row?.totalWins ?? row?.stats?.totalWins ?? player?.stats?.totalWins ?? 0),
     losses: Number(row?.losses ?? row?.totalLosses ?? row?.stats?.totalLosses ?? player?.stats?.totalLosses ?? 0),
     // change: Number(row?.change ?? row?.eloChange ?? row?.eloDelta ?? 0),
-    isCurrentUser: Boolean(row?.isCurrentUser) || (currentUserId !== undefined && Number(playerId) === currentUserId),
+    isCurrentUser: currentUserId != null && playerId === currentUserId,
   }
 }
 
@@ -160,7 +162,16 @@ export default function GroupRankingPage() {
           </div>
         ) : rankings.length > 0 ? (
           rankings.map((row) => (
-            <RankingRow key={`${row.position}-${row.name}`} {...row} />
+            <RankingRow
+              key={row.position}
+              position={row.position}
+              name={row.name}
+              avatarUrl={row.avatarUrl}
+              elo={row.elo}
+              wins={row.wins}
+              losses={row.losses}
+              isCurrentUser={row.isCurrentUser}
+            />
           ))
         ) : (
           <div className="bg-surface rounded-xl p-4 text-sm text-text-muted">

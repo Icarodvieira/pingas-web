@@ -159,3 +159,4 @@ export function BottomNav() {
 }
 
 export { InfiniteScrollIndicator } from './InfiniteScrollIndicator'
+export { PlayerAvatar } from './PlayerAvatar'

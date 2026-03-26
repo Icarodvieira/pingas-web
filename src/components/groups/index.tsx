@@ -2,7 +2,7 @@
 
 import { TrendingUp, TrendingDown, Minus, Users } from 'lucide-react'
 import Link from 'next/link'
-import { getInitials } from '@/lib/utils'
+import { PlayerAvatar } from '@/components/shared'
 
 // ─── GroupCard ────────────────────────────────────────────────────────────────
 interface GroupCardProps {
@@ -55,8 +55,6 @@ interface RankingRowProps {
 }
 
 export function RankingRow({ position, avatarUrl, name, elo, wins, losses, change, isCurrentUser = false }: RankingRowProps) {
-  const initials = getInitials(name)
-
   const positionDisplay = (pos: number) => {
     if (pos === 1) return '🥇'
     if (pos === 2) return '🥈'
@@ -74,15 +72,11 @@ export function RankingRow({ position, avatarUrl, name, elo, wins, losses, chang
       </div>
 
       {/* Avatar */}
-      <div className="flex-shrink-0">
-        {avatarUrl ? (
-          <img src={avatarUrl} alt={name} className="w-12 h-12 rounded-full object-cover" />
-        ) : (
-          <div className="w-12 h-12 rounded-full bg-accent-primary/20 flex items-center justify-center">
-            <span className="text-accent-primary font-bold text-sm">{initials}</span>
-          </div>
-        )}
-      </div>
+      <PlayerAvatar
+        name={name}
+        avatarUrl={avatarUrl}
+        size="sm"
+      />
 
       {/* Info */}
       <div className="flex-1 min-w-0">
