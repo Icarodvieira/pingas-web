@@ -1,6 +1,6 @@
 'use client'
 
-import { BottomNav, Badge, ThemeToggle } from '@/components/shared'
+import { BottomNav, Badge, ThemeToggle, PlayerAvatar } from '@/components/shared'
 import { InfiniteScrollIndicator } from '@/components/shared/InfiniteScrollIndicator'
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts'
 import { getInitials } from '@/lib/utils'
@@ -93,9 +93,14 @@ export default function ProfilePage() {
         <div className="flex flex-col items-center text-center mb-6">
           <button
             onClick={() => router.push('/profile/edit')}
-            className="w-24 h-24 rounded-full bg-accent-primary/20 flex items-center justify-center mb-4 hover:bg-accent-primary/30 transition-all active:scale-95 relative group"
+            className="relative group mb-4"
           >
-            <span className="text-accent-primary font-bold text-3xl">{initials}</span>
+            <PlayerAvatar
+              name={player?.name ?? ''}
+              avatarUrl={player?.avatarUrl}
+              size="lg"
+              className="group-hover:opacity-80 transition-all active:scale-95"
+            />
             <div className="absolute bottom-0 right-0 w-8 h-8 bg-accent-primary rounded-full flex items-center justify-center shadow-lg group-hover:bg-accent-primary/90 transition-all">
               <svg className="w-4 h-4 text-background" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -105,12 +110,11 @@ export default function ProfilePage() {
           <h2 className="text-2xl font-bold text-foreground mb-1">{player?.name ?? '...'}</h2>
         </div>
 
-        {/* Stats grid */}
-        <div className="grid grid-cols-4 gap-4">
-          {statItems.map(({ label, value, color }) => (
-            <div key={label} className="text-center">
-              <p className={`text-2xl font-bold font-mono ${color}`}>{value}</p>
-              <p className="text-xs text-text-muted mt-1">{label}</p>
+        <div className="grid grid-cols-4 gap-3">
+          {statItems.map((stat) => (
+            <div key={stat.label} className="text-center">
+              <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
+              <p className="text-xs text-text-muted">{stat.label}</p>
             </div>
           ))}
         </div>
@@ -182,7 +186,7 @@ export default function ProfilePage() {
         <div className="flex flex-col gap-2">
         {matches.map((match: any, i: number) => {
           const isPlayer1 = match.player1Id === playerId
-          const opponent = isPlayer1 ? match.player2.name : match.player1.name
+          const opponent = isPlayer1 ? match.player2 : match.player1
           const myScore = isPlayer1 ? match.scoreP1 : match.scoreP2
           const oppScore = isPlayer1 ? match.scoreP2 : match.scoreP1
           const eloChange = isPlayer1 ? match.eloChangeP1 : match.eloChangeP2
@@ -192,11 +196,13 @@ export default function ProfilePage() {
           return (
             <div key={i} className="bg-surface rounded-xl p-4 hover:bg-surface-elevated transition-all">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-accent-primary/20 flex items-center justify-center flex-shrink-0">
-                  <span className="text-accent-primary font-bold text-xs">{getInitials(opponent)}</span>
-                </div>
+                <PlayerAvatar
+                  name={opponent.name}
+                  avatarUrl={opponent.avatarUrl}
+                  size="sm"
+                />
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-foreground truncate">{opponent}</p>
+                  <p className="font-semibold text-foreground truncate">{opponent.name}</p>
                   <p className="text-xs text-text-muted">{date}</p>
                 </div>
                 <p className="w-14 text-center font-mono font-semibold text-foreground flex-shrink-0">
