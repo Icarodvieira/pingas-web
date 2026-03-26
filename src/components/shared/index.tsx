@@ -157,3 +157,5 @@ export function BottomNav() {
     </nav>
   )
 }
+
+export { InfiniteScrollIndicator } from './InfiniteScrollIndicator'

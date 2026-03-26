@@ -1,12 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { isAxiosError } from 'axios'
 import { ArrowLeft, Minus, Plus } from 'lucide-react'
 import { PrimaryButton, ThemeToggle } from '@/components/shared'
+import { InfiniteScrollIndicator } from '@/components/shared/InfiniteScrollIndicator'
 import { MatchCard } from '@/components/matches'
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
 import { api } from '@/lib/api'
 import { calculateElo } from '@/lib/elo'
 import { getInitials } from '@/lib/utils'
@@ -294,6 +296,58 @@ export default function RegisterMatchPage() {
     },
   })
 
+  const {
+    items: infiniteMatches,
+    isLoading: isLoadingInfiniteMatches,
+    hasMore: hasMoreMatches,
+    observerTarget: matchesObserverTarget,
+    loadMore: loadMoreMatches,
+  } = useInfiniteScroll({ initialLimit: 5 })
+
+  // Carregar matches iniciais quando a query termina
+  useEffect(() => {
+    if (!isLoadingMatches && matches.length > 0) {
+      loadMoreMatches(matches)
+    }
+  }, [isLoadingMatches, matches, loadMoreMatches])
+
+  // Carregar mais matches quando o observer é acionado
+  useEffect(() => {
+    if (!isLoadingInfiniteMatches || !id) return
+
+    const offset = infiniteMatches.length
+
+    const fetchMoreMatches = async () => {
+      try {
+        let response
+        try {
+          response = await api.get(`/groups/${id}/matches?limit=5&offset=${offset}`)
+        } catch {
+          response = await api.get(`/matches?groupId=${id}&limit=5&offset=${offset}`)
+        }
+
+        const payload = response.data?.data ?? response.data
+        const rawMatches = Array.isArray(payload)
+          ? payload
+          : Array.isArray(payload?.matches)
+            ? payload.matches
+            : Array.isArray(payload?.data)
+              ? payload.data
+              : []
+
+        const newMatches = rawMatches
+          .map(mapRecentMatch)
+          .filter((match: RecentMatch | null): match is RecentMatch => match !== null)
+
+        loadMoreMatches(newMatches)
+      } catch (error) {
+        console.error('Erro ao carregar mais partidas:', error)
+      }
+    }
+
+    fetchMoreMatches()
+  }, [isLoadingInfiniteMatches, id, infiniteMatches.length, loadMoreMatches])
+
   const [player1, setPlayer1] = useState<Member | null>(null)
   const [player2, setPlayer2] = useState<Member | null>(null)
   const [score1, setScore1] = useState(0)
@@ -451,25 +505,34 @@ export default function RegisterMatchPage() {
         )}
 
         <div>
-          <h2 className="text-xs font-semibold text-text-muted mb-4 uppercase tracking-wide">Partidas Recentes</h2>
+          <h2 className="text-xs font-semibold text-text-muted mb-4 uppercase tracking-wide">Histórico</h2>
           <div className="space-y-3">
-            {isLoadingMatches ? (
+            {infiniteMatches.length > 0 ? (
+              infiniteMatches.map((match) => (
+                <MatchCard key={match.id} {...match} />
+              ))
+            ) : isLoadingMatches ? (
               <div className="bg-surface rounded-xl p-4 text-sm text-text-muted">
                 Carregando partidas...
               </div>
             ) : hasMatchesLoadError ? (
               <div className="bg-surface rounded-xl p-4 text-sm text-text-muted">
-                Nao foi possivel carregar as partidas recentes.
+                Nao foi possivel carregar o histórico.
               </div>
-            ) : matches.length > 0 ? (
-              matches.map((match) => (
-                <MatchCard key={match.id} {...match} />
-              ))
             ) : (
               <div className="bg-surface rounded-xl p-4 text-sm text-text-muted">
                 Nenhuma partida registrada ainda.
               </div>
             )}
+            <div ref={matchesObserverTarget} className="py-4 flex items-center justify-center">
+              <InfiniteScrollIndicator
+                isLoading={isLoadingInfiniteMatches}
+                hasMore={hasMoreMatches}
+                itemCount={infiniteMatches.length}
+                loadingMessage="Carregando mais partidas..."
+                endMessage="Fim do histórico"
+              />
+            </div>
           </div>
         </div>
       </div>
