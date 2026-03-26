@@ -34,39 +34,39 @@ export function MatchCard({ player1Name, player1Avatar, player1Score, player1Elo
   )
 
   return (
-    <div className="bg-surface rounded-xl p-4 hover:bg-surface-elevated transition-all">
+    <div className="bg-surface rounded-xl p-4 hover:bg-surface-elevated transition-all overflow-hidden">
       <p className="text-xs text-text-muted mb-3">{date}</p>
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-2 min-w-0">
         {/* Player 1 */}
-        <div className="flex items-center gap-3 flex-1">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
           <Avatar name={player1Name} url={player1Avatar} />
           <div className="min-w-0 flex-1">
-            <p className={`font-semibold truncate ${p1Won ? 'text-success' : 'text-foreground'} ${currentUserName === player1Name ? 'underline' : ''}`}>
+            <p className={`font-semibold truncate text-sm ${p1Won ? 'text-success' : 'text-foreground'} ${currentUserName === player1Name ? 'underline' : ''}`}>
               {player1Name}
             </p>
             <div className={`flex items-center gap-1 text-xs ${player1EloChange > 0 ? 'text-success' : 'text-danger'}`}>
-              {player1EloChange > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+              {player1EloChange > 0 ? <TrendingUp className="w-3 h-3 flex-shrink-0" /> : <TrendingDown className="w-3 h-3 flex-shrink-0" />}
               <span className="font-mono font-bold">{player1EloChange > 0 ? '+' : ''}{player1EloChange}</span>
             </div>
           </div>
         </div>
 
         {/* Placar */}
-        <div className="flex items-center gap-2 px-4 py-2 bg-background rounded-lg">
-          <span className={`text-2xl font-bold font-mono ${p1Won ? 'text-success' : isDraw ? 'text-text-muted' : 'text-foreground'}`}>{player1Score}</span>
+        <div className="flex items-center gap-1 px-2 py-1 bg-background rounded-lg flex-shrink-0">
+          <span className={`text-lg font-bold font-mono ${p1Won ? 'text-success' : isDraw ? 'text-text-muted' : 'text-foreground'}`}>{player1Score}</span>
           <span className="text-text-muted font-bold">—</span>
-          <span className={`text-2xl font-bold font-mono ${p2Won ? 'text-success' : isDraw ? 'text-text-muted' : 'text-foreground'}`}>{player2Score}</span>
+          <span className={`text-lg font-bold font-mono ${p2Won ? 'text-success' : isDraw ? 'text-text-muted' : 'text-foreground'}`}>{player2Score}</span>
         </div>
 
         {/* Player 2 */}
-        <div className="flex items-center gap-3 flex-1 flex-row-reverse">
+        <div className="flex items-center gap-2 flex-1 min-w-0 flex-row-reverse">
           <Avatar name={player2Name} url={player2Avatar} />
           <div className="min-w-0 flex-1 text-right">
-            <p className={`font-semibold truncate ${p2Won ? 'text-success' : 'text-foreground'} ${currentUserName === player2Name ? 'underline' : ''}`}>
+            <p className={`font-semibold truncate text-sm ${p2Won ? 'text-success' : 'text-foreground'} ${currentUserName === player2Name ? 'underline' : ''}`}>
               {player2Name}
             </p>
             <div className={`flex items-center gap-1 justify-end text-xs ${player2EloChange > 0 ? 'text-success' : 'text-danger'}`}>
-              {player2EloChange > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+              {player2EloChange > 0 ? <TrendingUp className="w-3 h-3 flex-shrink-0" /> : <TrendingDown className="w-3 h-3 flex-shrink-0" />}
               <span className="font-mono font-bold">{player2EloChange > 0 ? '+' : ''}{player2EloChange}</span>
             </div>
           </div>
