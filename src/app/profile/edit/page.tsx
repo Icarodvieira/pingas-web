@@ -1,13 +1,9 @@
 'use client'
 
-import { ThemeToggle } from '@/components/shared'
-import { ArrowLeft } from 'lucide-react'
-import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { getInitials } from '@/lib/utils'
+import { useRouter } from 'next/navigation'
 import { api } from '@/lib/api'
-
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+import { PlayerAvatar } from '@/components/shared'
 
 export default function EditProfilePage() {
   const router = useRouter()
@@ -32,180 +28,125 @@ export default function EditProfilePage() {
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        setError('A imagem deve ter no máximo 2MB')
+        return
+      }
       setFoto(file)
       const reader = new FileReader()
-      reader.onload = (event) => {
-        setFotoPreview(event.target?.result as string)
-      }
+      reader.onloadend = () => setFotoPreview(reader.result as string)
       reader.readAsDataURL(file)
     }
   }
 
-  const isEmailValid = email.length === 0 || emailRegex.test(email)
-  const isNomeValid = nome.trim().length > 0
-  const hasChanges = nome !== player?.name || email !== player?.email || foto !== null
-  const canSubmit = isNomeValid && isEmailValid && hasChanges && !loading
-
   const handleSalvar = async () => {
-    if (!canSubmit || !playerId) return
-
-    setError('')
+    if (!playerId) return
     setLoading(true)
-    
+    setError('')
+
     try {
-      await api.patch(`/players/${playerId}`, {
-        name: nome,
-        email: email,
-      })
-      
+      // Upload de avatar (se selecionou foto)
+      if (foto) {
+        const formData = new FormData()
+        formData.append('avatar', foto)
+        await api.post(`/players/${playerId}/avatar`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        })
+      }
+
+      // Atualizar dados do perfil
+      await api.put(`/players/${playerId}`, { name: nome, email })
       router.push('/profile')
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao salvar perfil. Tente novamente.')
-      console.error(err)
+      setError(err.response?.data?.message || 'Erro ao salvar perfil')
     } finally {
       setLoading(false)
     }
   }
 
-  const initials = getInitials(nome)
-
   return (
-    <div className="min-h-screen bg-background pb-8">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-surface border-b-2 border-border px-6 py-4">
-        <div className="flex items-center justify-between mb-2">
-          <button 
-            onClick={() => router.push('/profile')} 
-            className="p-2 -ml-2 hover:bg-background rounded-xl transition-all"
-          >
-            <ArrowLeft className="w-6 h-6 text-foreground" />
+        <div className="flex items-center justify-between">
+          <button onClick={() => router.back()} className="text-text-muted hover:text-foreground transition-colors">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
           </button>
-          <ThemeToggle />
+          <h1 className="text-lg font-bold text-foreground">Editar Perfil</h1>
+          <div className="w-6" />
         </div>
-        <h1 className="text-2xl font-bold text-foreground">Editar Perfil</h1>
       </div>
 
-      <div className="px-6 py-6 space-y-6">
+      <div className="px-6 py-8 space-y-8">
         {/* Foto de perfil */}
-        {/* TODO: Ativar upload de foto amanhã */}
-        {/* <div className="flex flex-col items-center">
-          <div className="relative mb-4 group">
-            <div className="w-32 h-32 rounded-full bg-accent-primary/20 flex items-center justify-center">
-              {fotoPreview ? (
-                <img 
-                  src={fotoPreview} 
-                  alt="Preview" 
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                <span className="text-accent-primary font-bold text-5xl">{initials}</span>
-              )}
-            </div>
-            <label
-              htmlFor="foto-input"
-              className="absolute bottom-0 right-0 w-10 h-10 bg-accent-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-accent-primary/80 transition-all active:scale-95 shadow-lg"
-            >
-              <svg className="w-5 h-5 text-background" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-            </label>
-            <input
-              id="foto-input"
-              type="file"
-              accept="image/*"
-              onChange={handleFotoChange}
-              className="hidden"
-            />
-          </div>
-          {fotoPreview && (
-            <button
-              onClick={() => {
-                setFoto(null)
-                setFotoPreview(null)
-              }}
-              className="text-xs text-danger hover:text-danger/80 transition-colors"
-            >
-              Remover foto
-            </button>
-          )}
-        </div> */}
-
-        {/* Avatar simples REMOVER AO INTEGRAR FOTO*/} 
         <div className="flex flex-col items-center">
-          <div className="w-32 h-32 rounded-full bg-accent-primary/20 flex items-center justify-center">
-            <span className="text-accent-primary font-bold text-5xl">{initials}</span>
-          </div>
+          <label htmlFor="foto-input" className="cursor-pointer relative group">
+            {fotoPreview ? (
+              <div className="w-24 h-24 rounded-full overflow-hidden ring-2 ring-accent-primary">
+                <img src={fotoPreview} alt="Preview" className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <PlayerAvatar
+                name={player?.name ?? ''}
+                avatarUrl={player?.avatarUrl}
+                size="lg"
+                className="group-hover:opacity-80 transition-all"
+              />
+            )}
+            <div className="absolute bottom-0 right-0 w-8 h-8 bg-accent-primary rounded-full flex items-center justify-center shadow-lg">
+              <svg className="w-4 h-4 text-background" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+          </label>
+          <input
+            id="foto-input"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleFotoChange}
+          />
+          <p className="text-xs text-text-muted mt-2">Toque para alterar foto</p>
         </div>
 
-        {/* Formulário */}
-        <div className="space-y-4">
-          {/* Nome */}
-          <div>
-            <label className="text-sm font-semibold text-text-muted mb-2 block uppercase tracking-wide">
-              Nome
-            </label>
-            <input
-              type="text"
-              value={nome}
-              onChange={(e) => setNome(e.target.value)}
-              placeholder="Seu nome completo"
-              className={`w-full bg-background border-2 rounded-lg px-4 py-3 text-foreground placeholder-text-muted focus:outline-none transition-all ${
-                isNomeValid 
-                  ? 'border-border focus:border-accent-primary' 
-                  : 'border-danger focus:border-danger'
-              }`}
-            />
-            {!isNomeValid && (
-              <p className="text-xs text-danger mt-1">Nome não pode ser vazio</p>
-            )}
-          </div>
-
-          {/* Email */}
-          <div>
-            <label className="text-sm font-semibold text-text-muted mb-2 block uppercase tracking-wide">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="seu.email@example.com"
-              className={`w-full bg-background border-2 rounded-lg px-4 py-3 text-foreground placeholder-text-muted focus:outline-none transition-all ${
-                isEmailValid 
-                  ? 'border-border focus:border-accent-primary' 
-                  : 'border-danger focus:border-danger'
-              }`}
-            />
-            {!isEmailValid && (
-              <p className="text-xs text-danger mt-1">Email inválido</p>
-            )}
-          </div>
+        {/* Campo nome */}
+        <div>
+          <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">Nome</label>
+          <input
+            type="text"
+            value={nome}
+            onChange={(e) => setNome(e.target.value)}
+            className="w-full mt-2 px-4 py-3 bg-surface border-2 border-border rounded-xl text-foreground focus:border-accent-primary focus:outline-none transition-colors"
+          />
         </div>
 
-        {/* Erros */}
+        {/* Campo email */}
+        <div>
+          <label className="text-xs font-semibold text-text-muted uppercase tracking-wide">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full mt-2 px-4 py-3 bg-surface border-2 border-border rounded-xl text-foreground focus:border-accent-primary focus:outline-none transition-colors"
+          />
+        </div>
+
+        {/* Erro */}
         {error && (
-          <div className="p-4 bg-danger/10 rounded-xl border-2 border-danger/20">
-            <p className="text-sm text-danger font-semibold">{error}</p>
-          </div>
+          <p className="text-sm text-danger text-center">{error}</p>
         )}
 
-        {/* Botões */}
-        <div className="flex gap-3 pt-4">
-          <button
-            onClick={() => router.push('/profile')}
-            disabled={loading}
-            className="flex-1 px-4 py-3 rounded-lg border-2 border-border text-foreground font-semibold hover:bg-background transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSalvar}
-            disabled={!canSubmit}
-            className="flex-1 px-4 py-3 rounded-lg bg-accent-primary text-background font-semibold hover:bg-accent-primary/90 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? 'Salvando...' : 'Salvar'}
-          </button>
-        </div>
+        {/* Botão salvar */}
+        <button
+          onClick={handleSalvar}
+          disabled={loading}
+          className="w-full py-3 bg-accent-primary text-background font-bold rounded-xl hover:bg-accent-primary/90 transition-all disabled:opacity-50"
+        >
+          {loading ? 'Salvando...' : 'Salvar'}
+        </button>
       </div>
     </div>
   )
