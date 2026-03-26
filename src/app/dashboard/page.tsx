@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Plus, Copy, Check } from 'lucide-react'
 import { BottomNav, FAB, ThemeToggle, Input, PrimaryButton } from '@/components/shared'
 import { GroupCard } from '@/components/groups'
 import { api } from '@/lib/api'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 
 //TODO: Refatorar para usar SWR ou React Query pra cache e revalidação automática dos dados dos grupos
 
@@ -12,8 +13,10 @@ interface Group {
   id: string
   name: string
   memberCount: number
-  userPosition: number
+  userPosition: number | null
   userElo: number
+  isCalibrating: boolean
+  gamesPlayed: number
 }
 
 interface GroupResponse {
@@ -24,16 +27,15 @@ interface GroupResponse {
   wins: number
   losses: number
   draws: number
+  gamesPlayed: number
+  isCalibrating: boolean
   joinedAt: string
-  position: number
+  position: number | null
   memberCount: number
 }
 
 export default function DashboardPage() {
-  const [playerId, setPlayerId] = useState<number | null>(null)
-  const [playerName, setPlayerName] = useState<string>('')
-  const [groups, setGroups] = useState<Group[]>([])
-  const [loading, setLoading] = useState(true)
+  const queryClient = useQueryClient()
   const [showModal, setShowModal] = useState(false)
   const [modalTab, setModalTab] = useState<'create' | 'join'>('create')
   const [groupName, setGroupName] = useState('')
@@ -42,44 +44,41 @@ export default function DashboardPage() {
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [newGroupInviteCode, setNewGroupInviteCode] = useState('')
   const [copied, setCopied] = useState(false)
+  const [actionLoading, setActionLoading] = useState(false)
 
-  // Passo 1: Pega o ID e nome do usuário logado
-  useEffect(() => {
-    api.get('/auth/me').then((res) => {
-      setPlayerId(res.data.player.id)
-      setPlayerName(res.data.player.name)
-    })
-  }, [])
+  const { data: authData, isLoading: isLoadingAuth } = useQuery({
+    queryKey: ['auth-me'],
+    queryFn: () => api.get('/auth/me').then((res) => res.data),
+    staleTime: 1000 * 60 * 5,
+  })
 
-  // Passo 2: Quando tiver o ID, carrega os grupos
-  useEffect(() => {
-    if (!playerId) return
-    fetchGroups()
-  }, [playerId])
+  const playerId: number | null = authData?.player?.id ?? null
+  const playerName: string = authData?.player?.name ?? ''
 
-  const fetchGroups = async () => {
-    try {
-      setLoading(true)
+  const {
+    data: resolvedGroups = [],
+    isLoading: isLoadingGroups,
+  } = useQuery<Group[]>({
+    queryKey: ['player-groups', playerId],
+    enabled: Boolean(playerId),
+    staleTime: 0,
+    refetchOnMount: 'always',
+    queryFn: async () => {
       const response = await api.get<GroupResponse[]>(`/players/${playerId}/groups`)
-      
-      // Mapear dados da API pro formato esperado
-      const mappedGroups: Group[] = response.data.map((group) => ({
+      return response.data.map((group) => ({
         id: group.groupId.toString(),
         name: group.groupName,
         memberCount: group.memberCount,
-        userPosition: group.position,
+        userPosition: group.position ?? null,
         userElo: group.eloRating,
+        isCalibrating: Boolean(group.isCalibrating),
+        gamesPlayed: Number(group.gamesPlayed ?? 0),
       }))
-      
-      setGroups(mappedGroups)
-      setError('')
-    } catch (err) {
-      console.error('Failed to fetch groups', err)
-      setError('Erro ao carregar grupos')
-    } finally {
-      setLoading(false)
-    }
-  }
+    },
+  })
+
+  // Mostra loading enquanto: auth carregando, playerId ainda não resolvido, ou grupos carregando
+  const loading = isLoadingAuth || !playerId || isLoadingGroups
 
   const handleCreateGroup = async () => {
     const trimmedGroupName = groupName.trim()
@@ -87,15 +86,18 @@ export default function DashboardPage() {
 
     try {
       setError('')
+      setActionLoading(true)
       const response = await api.post('/groups', { name: trimmedGroupName })
       setGroupName('')
       setShowModal(false)
       setNewGroupInviteCode(response.data.inviteCode)
       setShowInviteModal(true)
-      await fetchGroups()
+      await queryClient.invalidateQueries({ queryKey: ['player-groups', playerId] })
     } catch (err) {
       console.error('Failed to create group', err)
       setError('Erro ao criar grupo')
+    } finally {
+      setActionLoading(false)
     }
   }
 
@@ -104,13 +106,16 @@ export default function DashboardPage() {
 
     try {
       setError('')
+      setActionLoading(true)
       await api.post('/groups/join', { inviteCode: inviteCode.trim() })
       setInviteCode('')
       setShowModal(false)
-      await fetchGroups()
+      await queryClient.invalidateQueries({ queryKey: ['player-groups', playerId] })
     } catch (err) {
       console.error('Failed to join group', err)
       setError('Código inválido ou grupo não encontrado')
+    } finally {
+      setActionLoading(false)
     }
   }
 
@@ -154,13 +159,13 @@ export default function DashboardPage() {
         <>
           {/* Groups */}
           <div className="flex flex-col gap-3 px-6 py-6">
-            {groups.map((group) => (
+            {resolvedGroups.map((group) => (
               <GroupCard key={group.id} {...group} />
             ))}
           </div>
 
           {/* Empty State */}
-          {groups.length === 0 && (
+          {resolvedGroups.length === 0 && (
             <div className="px-6 py-12 text-center">
               <div className="w-20 h-20 mx-auto mb-4 bg-surface rounded-full flex items-center justify-center">
                 <Plus className="w-10 h-10 text-text-muted" />
@@ -216,14 +221,14 @@ export default function DashboardPage() {
                   placeholder="Ex: Time Labs" 
                   value={groupName} 
                   onChange={(e) => setGroupName(e.target.value)}
-                  disabled={loading}
+                  disabled={actionLoading}
                 />
                 <PrimaryButton 
                   fullWidth 
-                  disabled={!groupName.trim() || loading}
+                  disabled={!groupName.trim() || actionLoading}
                   onClick={handleCreateGroup}
                 >
-                  {loading ? 'Criando...' : 'Criar grupo'}
+                  {actionLoading ? 'Criando...' : 'Criar grupo'}
                 </PrimaryButton>
               </div>
             ) : (
@@ -233,15 +238,15 @@ export default function DashboardPage() {
                   placeholder="Ex: ABC123" 
                   value={inviteCode} 
                   onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
-                  disabled={loading}
+                  disabled={actionLoading}
                   maxLength={6}
                 />
                 <PrimaryButton 
                   fullWidth 
-                  disabled={inviteCode.length !== 6 || loading}
+                  disabled={inviteCode.length !== 6 || actionLoading}
                   onClick={handleJoinGroup}
                 >
-                  {loading ? 'Entrando...' : 'Entrar no grupo'}
+                  {actionLoading ? 'Entrando...' : 'Entrar no grupo'}
                 </PrimaryButton>
               </div>
             )}

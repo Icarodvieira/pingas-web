@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft } from 'lucide-react'
 import { BottomNav, FAB, ThemeToggle } from '@/components/shared'
-import { RankingRow } from '@/components/groups'
+import { RankingRow, CalibrationRow } from '@/components/groups'
 import { api } from '@/lib/api'
 
 type Period = 'Semana' | 'Mês' | 'Geral'
@@ -16,12 +16,14 @@ type GroupData = {
 }
 
 type RankingRowData = {
-  position: number
+  position: number | null
   name: string
   avatarUrl?: string
   elo: number
   wins: number
   losses: number
+  gamesPlayed: number
+  isCalibrating: boolean
   // change?: number
   isCurrentUser?: boolean
 }
@@ -47,12 +49,14 @@ function mapRankingRow(row: any, index: number, currentUserId?: number): Ranking
   if (!name) return null
 
   return {
-    position: Number(row?.position ?? index + 1),
+    position: row?.position ?? null,
     name,
     avatarUrl: player?.avatarUrl ?? row?.avatarUrl,
     elo: Number(row?.eloRating ?? row?.elo ?? player?.eloRating ?? player?.elo ?? 0),
     wins: Number(row?.wins ?? row?.totalWins ?? row?.stats?.totalWins ?? player?.stats?.totalWins ?? 0),
     losses: Number(row?.losses ?? row?.totalLosses ?? row?.stats?.totalLosses ?? player?.stats?.totalLosses ?? 0),
+    gamesPlayed: Number(row?.gamesPlayed ?? 0),
+    isCalibrating: Boolean(row?.isCalibrating ?? false),
     // change: Number(row?.change ?? row?.eloChange ?? row?.eloDelta ?? 0),
     isCurrentUser: currentUserId != null && playerId === currentUserId,
   }
@@ -93,6 +97,8 @@ export default function GroupRankingPage() {
   } = useQuery<RankingRowData[]>({
     queryKey: ['group-ranking', id, period, currentUserId],
     enabled: Boolean(id),
+    staleTime: 0,
+    refetchOnMount: 'always',
     queryFn: async () => {
       const response = await api.get(`/groups/${id}/ranking`, {
         params: { period },
@@ -161,18 +167,41 @@ export default function GroupRankingPage() {
             Nao foi possivel carregar o ranking.
           </div>
         ) : rankings.length > 0 ? (
-          rankings.map((row) => (
-            <RankingRow
-              key={row.position}
-              position={row.position}
-              name={row.name}
-              avatarUrl={row.avatarUrl}
-              elo={row.elo}
-              wins={row.wins}
-              losses={row.losses}
-              isCurrentUser={row.isCurrentUser}
-            />
-          ))
+          <>
+            {rankings
+              .filter((row) => !row.isCalibrating)
+              .map((row) => (
+                <RankingRow
+                  key={row.position}
+                  position={row.position!}
+                  name={row.name}
+                  avatarUrl={row.avatarUrl}
+                  elo={row.elo}
+                  wins={row.wins}
+                  losses={row.losses}
+                  isCurrentUser={row.isCurrentUser}
+                />
+              ))}
+
+            {rankings.some((row) => row.isCalibrating) && (
+              <>
+                <p className="text-xs text-text-muted uppercase tracking-wider font-semibold pt-2 px-1">
+                  Em calibração
+                </p>
+                {rankings
+                  .filter((row) => row.isCalibrating)
+                  .map((row) => (
+                    <CalibrationRow
+                      key={row.name}
+                      name={row.name}
+                      avatarUrl={row.avatarUrl}
+                      gamesPlayed={row.gamesPlayed}
+                      isCurrentUser={row.isCurrentUser}
+                    />
+                  ))}
+              </>
+            )}
+          </>
         ) : (
           <div className="bg-surface rounded-xl p-4 text-sm text-text-muted">
             Nenhum jogador encontrado neste ranking.

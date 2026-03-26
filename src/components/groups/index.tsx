@@ -1,6 +1,6 @@
 'use client'
 
-import { TrendingUp, TrendingDown, Minus, Users } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, Users, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { PlayerAvatar } from '@/components/shared'
 
@@ -9,11 +9,13 @@ interface GroupCardProps {
   id: string
   name: string
   memberCount: number
-  userPosition: number
+  userPosition: number | null
   userElo: number
+  isCalibrating: boolean
+  gamesPlayed: number
 }
 
-export function GroupCard({ id, name, memberCount, userPosition, userElo }: GroupCardProps) {
+export function GroupCard({ id, name, memberCount, userPosition, userElo, isCalibrating, gamesPlayed }: GroupCardProps) {
   return (
     <Link href={`/groups/${id}`}>
       <div className="bg-surface rounded-xl p-4 hover:bg-surface-elevated transition-all hover:scale-[1.02] active:scale-100 cursor-pointer">
@@ -26,19 +28,82 @@ export function GroupCard({ id, name, memberCount, userPosition, userElo }: Grou
         </div>
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-xs text-text-muted mb-1">Sua posição</p>
-            <p className="text-2xl font-bold font-mono text-accent-primary">
-              #{userPosition}
-              <span className="text-sm text-text-muted ml-1">de {memberCount}</span>
-            </p>
+            {isCalibrating ? (
+              <>
+                <p className="text-xs text-text-muted mb-1">Calibração</p>
+                <p className="text-lg font-bold font-mono text-text-muted">
+                  {gamesPlayed}<span className="text-sm">/10</span>
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-text-muted mb-1">Sua posição</p>
+                <p className="text-2xl font-bold font-mono text-accent-primary">
+                  #{userPosition}
+                  <span className="text-sm text-text-muted ml-1">de {memberCount}</span>
+                </p>
+              </>
+            )}
           </div>
           <div className="text-right">
-            <p className="text-xs text-text-muted mb-1">ELO</p>
-            <p className="text-xl font-bold font-mono text-foreground">{userElo}</p>
+            {isCalibrating ? (
+              <>
+                <p className="text-xs text-text-muted mb-1">Complete 10 partidas</p>
+                <p className="text-xs text-text-muted font-semibold">para entrar no ranking</p>
+              </>
+            ) : (
+              <>
+                <p className="text-xs text-text-muted mb-1">ELO</p>
+                <p className="text-xl font-bold font-mono text-foreground">{userElo}</p>
+              </>
+            )}
           </div>
         </div>
       </div>
     </Link>
+  )
+}
+
+// ─── CalibrationRow ───────────────────────────────────────────────────────────
+interface CalibrationRowProps {
+  name: string
+  avatarUrl?: string
+  gamesPlayed: number
+  isCurrentUser?: boolean
+}
+
+const CALIBRATION_THRESHOLD = 10
+
+export function CalibrationRow({ name, avatarUrl, gamesPlayed, isCurrentUser = false }: CalibrationRowProps) {
+  const remaining = CALIBRATION_THRESHOLD - gamesPlayed
+
+  return (
+    <div className={`flex items-center gap-4 p-4 rounded-xl transition-all ${isCurrentUser ? 'bg-accent-primary/10 ring-2 ring-accent-primary' : 'bg-surface'}`}>
+      {/* Ícone de calibração */}
+      <div className="w-10 flex-shrink-0 flex items-center justify-center">
+        <Clock className="w-6 h-6 text-text-muted" />
+      </div>
+
+      {/* Avatar */}
+      <PlayerAvatar
+        name={name}
+        avatarUrl={avatarUrl}
+        size="sm"
+      />
+
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <p className="font-semibold text-foreground truncate">{name}</p>
+        <p className="text-xs text-text-muted">Partidas de Calibração: {gamesPlayed}/{CALIBRATION_THRESHOLD}</p>
+      </div>
+
+      {/* Badge */}
+      <div className="flex-shrink-0 text-right">
+        <span className="inline-block bg-background text-text-muted text-xs font-semibold px-2 py-1 rounded-lg border border-border">
+          {remaining} restante{remaining !== 1 ? 's' : ''}
+        </span>
+      </div>
+    </div>
   )
 }
 

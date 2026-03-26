@@ -84,7 +84,7 @@ function mapGroupMember(member: any): Member | null {
       member?.totalGames ??
       member?.stats?.totalGames ??
       player?.stats?.totalGames ??
-      0
+      (Number(member?.wins ?? 0) + Number(member?.losses ?? 0) + Number(member?.draws ?? 0))
     ),
   }
 }
@@ -147,7 +147,13 @@ function PlayerSelector({
               <span className="text-accent-primary font-bold text-sm">{getInitials(selected.name)}</span>
             </div>
             <p className="font-semibold text-foreground text-sm">{selected.name.split(' ')[0]}</p>
-            <p className="text-xs text-text-muted font-mono">{selected.elo} ELO</p>
+            {selected.gamesPlayed < 10 ? (
+              <span className="text-[10px] text-warning font-semibold bg-warning/10 px-1.5 py-0.5 rounded-full">
+                Calibração {selected.gamesPlayed}/10
+              </span>
+            ) : (
+              <p className="text-xs text-text-muted font-mono">{selected.elo} ELO</p>
+            )}
             <p className="text-[11px] text-text-muted">{selected.gamesPlayed} jogos</p>
           </div>
         ) : (
@@ -174,14 +180,20 @@ function PlayerSelector({
                 }}
                 className="w-full px-4 py-3 text-left hover:bg-surface-elevated transition-all flex items-center gap-3"
               >
-                <div className="w-8 h-8 rounded-full bg-accent-primary/20 flex items-center justify-center flex-shrink-0">
+                {/* <div className="w-8 h-8 rounded-full bg-accent-primary/20 flex items-center justify-center flex-shrink-0">
                   <span className="text-accent-primary font-bold text-xs">{getInitials(member.name)}</span>
-                </div>
+                </div> */}
                 <div>
                   <p className="font-semibold text-foreground text-sm">{member.name}</p>
-                  <p className="text-xs text-text-muted font-mono">
-                    ELO {member.elo} · {member.gamesPlayed} jogos
-                  </p>
+                  {member.gamesPlayed < 10 ? (
+                    <p className="text-xs text-warning font-semibold font-mono">
+                      Calibração · {member.gamesPlayed}/10 jogos
+                    </p>
+                  ) : (
+                    <p className="text-xs text-text-muted font-mono">
+                      ELO {member.elo} · {member.gamesPlayed} jogos
+                    </p>
+                  )}
                 </div>
               </button>
             ))
@@ -386,6 +398,9 @@ export default function RegisterMatchPage() {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['group-members', id] }),
         queryClient.invalidateQueries({ queryKey: ['group-matches', id] }),
+        queryClient.invalidateQueries({ queryKey: ['group-ranking', id] }),
+        queryClient.invalidateQueries({ queryKey: ['group', id] }),
+        queryClient.invalidateQueries({ queryKey: ['player-groups'], exact: false }),
       ])
 
       setPlayer1(null)
