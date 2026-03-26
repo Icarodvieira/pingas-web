@@ -166,7 +166,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      {/* Histórico recente */}
+      {/* Histórico */}
       <div className="px-6 pb-6">
         <h3 className="text-sm font-semibold text-text-muted mb-4 uppercase tracking-wide">Histórico</h3>
         <div className="flex flex-col gap-2">
