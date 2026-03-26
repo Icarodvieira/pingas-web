@@ -167,11 +167,23 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     <p className="font-semibold text-foreground mb-1">{group.groupName}</p>
-                    <p className="text-xs text-text-muted">#{group.position} de {group.memberCount}</p>
+                    {group.isCalibrating ? (
+                      <p className="text-xs text-text-muted">Calibração: {group.gamesPlayed}/10</p>
+                    ) : (
+                      <p className="text-xs text-text-muted">#{group.position} de {group.memberCount}</p>
+                    )}
                   </div>
                   <div className="text-right">
-                    <p className="text-xl font-bold font-mono text-foreground">{group.eloRating}</p>
-                    <p className="text-xs text-text-muted">ELO</p>
+                    {group.isCalibrating ? (
+                      <p className="text-xs text-text-muted font-semibold max-w-[100px] text-right leading-tight">
+                        Complete 10 partidas para entrar no ranking
+                      </p>
+                    ) : (
+                      <>
+                        <p className="text-xl font-bold font-mono text-foreground">{group.eloRating}</p>
+                        <p className="text-xs text-text-muted">ELO</p>
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
