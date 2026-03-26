@@ -1,10 +1,12 @@
 'use client'
 
 import { BottomNav, Badge, ThemeToggle } from '@/components/shared'
+import { InfiniteScrollIndicator } from '@/components/shared/InfiniteScrollIndicator'
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts'
 import { getInitials } from '@/lib/utils'
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
+import { useInfiniteScroll } from '@/hooks/useInfiniteScroll'
 import { api } from '@/lib/api'
 
 // TODO: substituir por useQuery(() => api.get('/players/me/elo-history'))
@@ -21,7 +23,14 @@ const eloHistory = [
 export default function ProfilePage() {
   const [playerId, setPlayerId] = useState<number | null>(null)
   const [player, setPlayer] = useState<any>(null)
-  const [matches, setMatches] = useState<any[]>([])
+  const {
+    items: matches,
+    isLoading,
+    hasMore,
+    observerTarget,
+    loadMore,
+    reset,
+  } = useInfiniteScroll({ initialLimit: 5 })
 
   useEffect(() => {
     api.get('/auth/me').then((res) => {
@@ -38,10 +47,25 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!playerId) return
-    api.get(`/players/${playerId}/matches?limit=5`).then((res) => {
-      setMatches(res.data.data)
+    api.get(`/players/${playerId}/matches?limit=5&offset=0`).then((res) => {
+      loadMore(res.data.data)
     })
-  }, [playerId])
+  }, [playerId, loadMore])
+
+  useEffect(() => {
+    if (!playerId || !isLoading) return
+
+    const offset = matches.length
+
+    api
+      .get(`/players/${playerId}/matches?limit=5&offset=${offset}`)
+      .then((res) => {
+        loadMore(res.data.data)
+      })
+      .catch((error) => {
+        console.error('Erro ao carregar mais partidas:', error)
+      })
+  }, [isLoading, playerId, matches.length, loadMore])
 
   const initials = getInitials(player?.name ?? '')
 
@@ -144,7 +168,7 @@ export default function ProfilePage() {
 
       {/* Histórico recente */}
       <div className="px-6 pb-6">
-        <h3 className="text-sm font-semibold text-text-muted mb-4 uppercase tracking-wide">Histórico Recente</h3>
+        <h3 className="text-sm font-semibold text-text-muted mb-4 uppercase tracking-wide">Histórico</h3>
         <div className="flex flex-col gap-2">
         {matches.map((match: any, i: number) => {
           const isPlayer1 = match.player1Id === playerId
@@ -182,6 +206,18 @@ export default function ProfilePage() {
             </div>
           )
         })}
+        </div>
+
+        {/* Elemento observador para infinite scroll */}
+        <div ref={observerTarget} className="py-8 flex items-center justify-center">
+          <InfiniteScrollIndicator
+            isLoading={isLoading}
+            hasMore={hasMore}
+            itemCount={matches.length}
+            loadingMessage="Carregando mais partidas..."
+            endMessage="Fim do histórico"
+            emptyMessage="Nenhuma partida encontrada"
+          />
         </div>
       </div>
 
