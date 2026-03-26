@@ -11,6 +11,7 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function EditProfilePage() {
   const router = useRouter()
+  const [playerId, setPlayerId] = useState<number | null>(null)
   const [player, setPlayer] = useState<any>(null)
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
@@ -21,6 +22,8 @@ export default function EditProfilePage() {
 
   useEffect(() => {
     api.get('/auth/me').then((res) => {
+      setPlayerId(res.data.player.id)
+      setPlayer(res.data.player)
       setNome(res.data.player.name || '')
       setEmail(res.data.email || '')
     })
@@ -44,13 +47,13 @@ export default function EditProfilePage() {
   const canSubmit = isNomeValid && isEmailValid && hasChanges && !loading
 
   const handleSalvar = async () => {
-    if (!canSubmit) return
+    if (!canSubmit || !playerId) return
 
     setError('')
     setLoading(true)
     
     try {
-      await api.patch(`/players/${player.id}`, {
+      await api.patch(`/players/${playerId}`, {
         name: nome,
         email: email,
       })
