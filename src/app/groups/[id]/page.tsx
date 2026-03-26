@@ -21,7 +21,7 @@ type RankingRowData = {
   elo: number
   wins: number
   losses: number
-  change?: number
+  // change?: number
   isCurrentUser?: boolean
 }
 
@@ -51,7 +51,7 @@ function mapRankingRow(row: any, index: number, currentUserId?: number): Ranking
     elo: Number(row?.eloRating ?? row?.elo ?? player?.eloRating ?? player?.elo ?? 0),
     wins: Number(row?.wins ?? row?.totalWins ?? row?.stats?.totalWins ?? player?.stats?.totalWins ?? 0),
     losses: Number(row?.losses ?? row?.totalLosses ?? row?.stats?.totalLosses ?? player?.stats?.totalLosses ?? 0),
-    change: Number(row?.change ?? row?.eloChange ?? row?.eloDelta ?? 0),
+    // change: Number(row?.change ?? row?.eloChange ?? row?.eloDelta ?? 0),
     isCurrentUser: Boolean(row?.isCurrentUser) || (currentUserId !== undefined && Number(playerId) === currentUserId),
   }
 }
