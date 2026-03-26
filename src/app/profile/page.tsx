@@ -87,19 +87,28 @@ export default function ProfilePage() {
         <h3 className="text-sm font-semibold text-text-muted mb-4 uppercase tracking-wide">
           Evolução ELO — últimos 30 dias
         </h3>
-        <div className="h-32">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={eloHistory}>
-              <YAxis domain={['dataMin - 50', 'dataMax + 50']} hide />
-              <Line
-                type="monotone"
-                dataKey="elo"
-                stroke="var(--accent-primary)"
-                strokeWidth={3}
-                dot={false}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+        <div className="h-32 relative">
+          <div className="absolute inset-0 blur-sm opacity-75">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={eloHistory}>
+                <YAxis domain={['dataMin - 50', 'dataMax + 50']} hide />
+                <Line
+                  type="monotone"
+                  dataKey="elo"
+                  stroke="var(--accent-primary)"
+                  strokeWidth={3}
+                  dot={false}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+          
+          {/* Overlay com mensagem */}
+          <div className="absolute inset-0 flex items-center justify-center backdrop-blur-sm">
+            <div className="text-center">
+              <p className="text-sm font-semibold text-text-muted">Em breve</p>
+            </div>
+          </div>
         </div>
         <div className="flex items-center justify-between mt-2">
           <p className="text-xs text-text-muted">{eloHistory[0].date}</p>
