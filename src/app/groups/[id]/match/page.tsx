@@ -282,52 +282,17 @@ export default function RegisterMatchPage() {
   })
 
   const {
-    data: matches = [],
-    isLoading: isLoadingMatches,
-    isError: hasMatchesLoadError,
-  } = useQuery<RecentMatch[]>({
-    queryKey: ['group-matches', id],
-    enabled: Boolean(id),
-    queryFn: async () => {
-      let response
-
-      try {
-        response = await api.get(`/groups/${id}/matches?limit=5`)
-      } catch {
-        response = await api.get(`/matches?groupId=${id}&limit=5`)
-      }
-
-      const payload = response.data?.data ?? response.data
-      const rawMatches = Array.isArray(payload)
-        ? payload
-        : Array.isArray(payload?.matches)
-          ? payload.matches
-          : Array.isArray(payload?.data)
-            ? payload.data
-            : []
-
-      return rawMatches
-        .map(mapRecentMatch)
-        .filter((match: RecentMatch | null): match is RecentMatch => match !== null)
-    },
-  })
-
-  const {
     items: infiniteMatches,
     isLoading: isLoadingInfiniteMatches,
     hasMore: hasMoreMatches,
     observerTarget: matchesObserverTarget,
     loadMore: loadMoreMatches,
+    reset: resetMatches,
   } = useInfiniteScroll({ initialLimit: 5 })
 
-  // Carregar matches iniciais quando a query termina
-  useEffect(() => {
-    if (!isLoadingMatches && matches.length > 0) {
-      loadMoreMatches(matches)
-    }
-  }, [isLoadingMatches, matches, loadMoreMatches])
+  const hasMatchesLoadError = false
 
-  // Carregar mais matches quando o observer é acionado
+  // Carrega matches sempre que o observer aciona (inclui carga inicial via startLoading no mount)
   useEffect(() => {
     if (!isLoadingInfiniteMatches || !id) return
 
@@ -335,21 +300,13 @@ export default function RegisterMatchPage() {
 
     const fetchMoreMatches = async () => {
       try {
-        let response
-        try {
-          response = await api.get(`/groups/${id}/matches?limit=5&offset=${offset}`)
-        } catch {
-          response = await api.get(`/matches?groupId=${id}&limit=5&offset=${offset}`)
-        }
-
+        const response = await api.get(`/groups/${id}/matches?limit=5&offset=${offset}`)
         const payload = response.data?.data ?? response.data
         const rawMatches = Array.isArray(payload)
           ? payload
-          : Array.isArray(payload?.matches)
-            ? payload.matches
-            : Array.isArray(payload?.data)
-              ? payload.data
-              : []
+          : Array.isArray(payload?.data)
+            ? payload.data
+            : []
 
         const newMatches = rawMatches
           .map(mapRecentMatch)
@@ -358,6 +315,7 @@ export default function RegisterMatchPage() {
         loadMoreMatches(newMatches)
       } catch (error) {
         console.error('Erro ao carregar mais partidas:', error)
+        loadMoreMatches([])
       }
     }
 
@@ -397,11 +355,12 @@ export default function RegisterMatchPage() {
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['group-members', id] }),
-        queryClient.invalidateQueries({ queryKey: ['group-matches', id] }),
         queryClient.invalidateQueries({ queryKey: ['group-ranking', id] }),
         queryClient.invalidateQueries({ queryKey: ['group', id] }),
         queryClient.invalidateQueries({ queryKey: ['player-groups'], exact: false }),
       ])
+
+      resetMatches()
 
       setPlayer1(null)
       setPlayer2(null)
@@ -530,7 +489,7 @@ export default function RegisterMatchPage() {
               infiniteMatches.map((match) => (
                 <MatchCard key={match.id} {...match} />
               ))
-            ) : isLoadingMatches ? (
+            ) : isLoadingInfiniteMatches && infiniteMatches.length === 0 ? (
               <div className="bg-surface rounded-xl p-4 text-sm text-text-muted">
                 Carregando partidas...
               </div>
