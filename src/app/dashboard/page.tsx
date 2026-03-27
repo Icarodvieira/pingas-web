@@ -46,10 +46,11 @@ export default function DashboardPage() {
   const [copied, setCopied] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
 
-  const { data: authData, isLoading: isLoadingAuth } = useQuery({
+  const { data: authData, isLoading: isLoadingAuth, isError: isAuthError } = useQuery({
     queryKey: ['auth-me'],
     queryFn: () => api.get('/auth/me').then((res) => res.data),
     staleTime: 1000 * 60 * 5,
+    retry: 2,
   })
 
   const playerId: number | null = authData?.player?.id ?? null
@@ -58,6 +59,7 @@ export default function DashboardPage() {
   const {
     data: resolvedGroups = [],
     isLoading: isLoadingGroups,
+    isError: isGroupsError,
   } = useQuery<Group[]>({
     queryKey: ['player-groups', playerId],
     enabled: Boolean(playerId),
@@ -77,8 +79,9 @@ export default function DashboardPage() {
     },
   })
 
-  // Mostra loading enquanto: auth carregando, playerId ainda não resolvido, ou grupos carregando
-  const loading = isLoadingAuth || !playerId || isLoadingGroups
+  // Loading apenas enquanto as queries iniciais ainda não resolveram
+  const loading = isLoadingAuth || (Boolean(playerId) && isLoadingGroups)
+  const hasError = isAuthError || isGroupsError
 
   const handleCreateGroup = async () => {
     const trimmedGroupName = groupName.trim()
@@ -154,6 +157,16 @@ export default function DashboardPage() {
             <div className="w-8 h-8 border-4 border-accent-primary border-t-transparent rounded-full animate-spin" />
           </div>
           <p className="text-text-muted mt-4">Carregando grupos...</p>
+        </div>
+      ) : hasError ? (
+        <div className="px-6 py-12 text-center">
+          <p className="text-text-muted mb-4">Não foi possível carregar os grupos.</p>
+          <PrimaryButton onClick={() => {
+            queryClient.invalidateQueries({ queryKey: ['auth-me'] })
+            queryClient.invalidateQueries({ queryKey: ['player-groups', playerId] })
+          }}>
+            Tentar novamente
+          </PrimaryButton>
         </div>
       ) : (
         <>
