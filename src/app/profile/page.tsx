@@ -196,7 +196,7 @@ export default function ProfilePage() {
       <div className="px-6 pb-6">
         <h3 className="text-sm font-semibold text-text-muted mb-4 uppercase tracking-wide">Histórico</h3>
         <div className="flex flex-col gap-2">
-        {matches.map((match: any, i: number) => {
+          {matches.map((match: any, i: number) => {
           const isPlayer1 = match.player1Id === playerId
           const opponent = isPlayer1 ? match.player2 : match.player1
           const myScore = isPlayer1 ? match.scoreP1 : match.scoreP2
@@ -208,13 +208,30 @@ export default function ProfilePage() {
           return (
             <div key={i} className="bg-surface rounded-xl p-4 hover:bg-surface-elevated transition-all">
               <div className="flex items-center gap-3">
-                <PlayerAvatar
-                  name={opponent.name}
-                  avatarUrl={opponent.avatarUrl}
-                  size="sm"
-                />
+                {opponent?.id ? (
+                  <Link href={`/players/${opponent.id}`}>
+                    <PlayerAvatar
+                      name={opponent.name}
+                      avatarUrl={opponent.avatarUrl}
+                      size="sm"
+                      className="hover:opacity-80 transition-opacity"
+                    />
+                  </Link>
+                ) : (
+                  <PlayerAvatar
+                    name={opponent.name}
+                    avatarUrl={opponent.avatarUrl}
+                    size="sm"
+                  />
+                )}
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-foreground truncate">{opponent.name}</p>
+                  {opponent?.id ? (
+                    <Link href={`/players/${opponent.id}`}>
+                      <p className="font-semibold text-foreground truncate hover:text-accent-primary transition-colors">{opponent.name}</p>
+                    </Link>
+                  ) : (
+                    <p className="font-semibold text-foreground truncate">{opponent.name}</p>
+                  )}
                   <p className="text-xs text-text-muted">{date}</p>
                 </div>
                 <p className="w-14 text-center font-mono font-semibold text-foreground flex-shrink-0">

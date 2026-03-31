@@ -1,15 +1,18 @@
 'use client'
 
+import Link from 'next/link'
 import { TrendingUp, TrendingDown } from 'lucide-react'
 import { Badge } from '@/components/shared'
 import { PlayerAvatar } from '@/components/shared/PlayerAvatar'
 
 // ─── MatchCard ────────────────────────────────────────────────────────────────
 interface MatchCardProps {
+  player1Id?: number
   player1Name: string
   player1Avatar?: string
   player1Score: number
   player1EloChange: number
+  player2Id?: number
   player2Name: string
   player2Avatar?: string
   player2Score: number
@@ -18,7 +21,7 @@ interface MatchCardProps {
   currentUserName?: string
 }
 
-export function MatchCard({ player1Name, player1Avatar, player1Score, player1EloChange, player2Name, player2Avatar, player2Score, player2EloChange, date, currentUserName }: MatchCardProps) {
+export function MatchCard({ player1Id, player1Name, player1Avatar, player1Score, player1EloChange, player2Id, player2Name, player2Avatar, player2Score, player2EloChange, date, currentUserName }: MatchCardProps) {
   const p1Won = player1Score > player2Score
   const p2Won = player2Score > player1Score
   const isDraw = player1Score === player2Score
@@ -29,11 +32,25 @@ export function MatchCard({ player1Name, player1Avatar, player1Score, player1Elo
       <div className="flex items-center justify-between gap-2 min-w-0">
         {/* Player 1 */}
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <PlayerAvatar name={player1Name} avatarUrl={player1Avatar} size="sm" />
+          {player1Id ? (
+            <Link href={`/players/${player1Id}`}>
+              <PlayerAvatar name={player1Name} avatarUrl={player1Avatar} size="sm" className="hover:opacity-80 transition-opacity" />
+            </Link>
+          ) : (
+            <PlayerAvatar name={player1Name} avatarUrl={player1Avatar} size="sm" />
+          )}
           <div className="min-w-0 flex-1">
-            <p className={`font-semibold truncate text-sm ${p1Won ? 'text-success' : 'text-foreground'} ${currentUserName === player1Name ? 'underline' : ''}`}>
-              {player1Name}
-            </p>
+            {player1Id ? (
+              <Link href={`/players/${player1Id}`}>
+                <p className={`font-semibold truncate text-sm hover:text-accent-primary transition-colors ${p1Won ? 'text-success' : 'text-foreground'} ${currentUserName === player1Name ? 'underline' : ''}`}>
+                  {player1Name}
+                </p>
+              </Link>
+            ) : (
+              <p className={`font-semibold truncate text-sm ${p1Won ? 'text-success' : 'text-foreground'} ${currentUserName === player1Name ? 'underline' : ''}`}>
+                {player1Name}
+              </p>
+            )}
             <div className={`flex items-center gap-1 text-xs ${player1EloChange > 0 ? 'text-success' : 'text-danger'}`}>
               {player1EloChange > 0 ? <TrendingUp className="w-3 h-3 flex-shrink-0" /> : <TrendingDown className="w-3 h-3 flex-shrink-0" />}
               <span className="font-mono font-bold">{player1EloChange > 0 ? '+' : ''}{player1EloChange}</span>
@@ -50,11 +67,25 @@ export function MatchCard({ player1Name, player1Avatar, player1Score, player1Elo
 
         {/* Player 2 */}
         <div className="flex items-center gap-2 flex-1 min-w-0 flex-row-reverse">
-          <PlayerAvatar name={player2Name} avatarUrl={player2Avatar} size="sm" />
+          {player2Id ? (
+            <Link href={`/players/${player2Id}`}>
+              <PlayerAvatar name={player2Name} avatarUrl={player2Avatar} size="sm" className="hover:opacity-80 transition-opacity" />
+            </Link>
+          ) : (
+            <PlayerAvatar name={player2Name} avatarUrl={player2Avatar} size="sm" />
+          )}
           <div className="min-w-0 flex-1 text-right">
-            <p className={`font-semibold truncate text-sm ${p2Won ? 'text-success' : 'text-foreground'} ${currentUserName === player2Name ? 'underline' : ''}`}>
-              {player2Name}
-            </p>
+            {player2Id ? (
+              <Link href={`/players/${player2Id}`}>
+                <p className={`font-semibold truncate text-sm hover:text-accent-primary transition-colors ${p2Won ? 'text-success' : 'text-foreground'} ${currentUserName === player2Name ? 'underline' : ''}`}>
+                  {player2Name}
+                </p>
+              </Link>
+            ) : (
+              <p className={`font-semibold truncate text-sm ${p2Won ? 'text-success' : 'text-foreground'} ${currentUserName === player2Name ? 'underline' : ''}`}>
+                {player2Name}
+              </p>
+            )}
             <div className={`flex items-center gap-1 justify-end text-xs ${player2EloChange > 0 ? 'text-success' : 'text-danger'}`}>
               {player2EloChange > 0 ? <TrendingUp className="w-3 h-3 flex-shrink-0" /> : <TrendingDown className="w-3 h-3 flex-shrink-0" />}
               <span className="font-mono font-bold">{player2EloChange > 0 ? '+' : ''}{player2EloChange}</span>

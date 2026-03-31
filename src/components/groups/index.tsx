@@ -2,6 +2,7 @@
 
 import { TrendingUp, TrendingDown, Minus, Users, Clock } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { PlayerAvatar } from '@/components/shared'
 
 // ─── GroupCard ────────────────────────────────────────────────────────────────
@@ -66,6 +67,7 @@ export function GroupCard({ id, name, memberCount, userPosition, userElo, isCali
 
 // ─── CalibrationRow ───────────────────────────────────────────────────────────
 interface CalibrationRowProps {
+  playerId?: number
   name: string
   avatarUrl?: string
   gamesPlayed: number
@@ -74,7 +76,7 @@ interface CalibrationRowProps {
 
 const CALIBRATION_THRESHOLD = 10
 
-export function CalibrationRow({ name, avatarUrl, gamesPlayed, isCurrentUser = false }: CalibrationRowProps) {
+export function CalibrationRow({ playerId, name, avatarUrl, gamesPlayed, isCurrentUser = false }: CalibrationRowProps) {
   const remaining = CALIBRATION_THRESHOLD - gamesPlayed
 
   return (
@@ -84,16 +86,24 @@ export function CalibrationRow({ name, avatarUrl, gamesPlayed, isCurrentUser = f
         <Clock className="w-6 h-6 text-text-muted" />
       </div>
 
-      {/* Avatar */}
-      <PlayerAvatar
-        name={name}
-        avatarUrl={avatarUrl}
-        size="sm"
-      />
+      {/* Avatar clicável */}
+      {playerId ? (
+        <Link href={`/players/${playerId}`}>
+          <PlayerAvatar name={name} avatarUrl={avatarUrl} size="sm" className="hover:opacity-80 transition-opacity" />
+        </Link>
+      ) : (
+        <PlayerAvatar name={name} avatarUrl={avatarUrl} size="sm" />
+      )}
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-foreground truncate">{name}</p>
+        {playerId ? (
+          <Link href={`/players/${playerId}`}>
+            <p className="font-semibold text-foreground truncate hover:text-accent-primary transition-colors">{name}</p>
+          </Link>
+        ) : (
+          <p className="font-semibold text-foreground truncate">{name}</p>
+        )}
         <p className="text-xs text-text-muted">Partidas de Calibração: {gamesPlayed}/{CALIBRATION_THRESHOLD}</p>
       </div>
 
@@ -109,6 +119,7 @@ export function CalibrationRow({ name, avatarUrl, gamesPlayed, isCurrentUser = f
 
 // ─── RankingRow ───────────────────────────────────────────────────────────────
 interface RankingRowProps {
+  playerId?: number
   position: number
   avatarUrl?: string
   name: string
@@ -119,7 +130,7 @@ interface RankingRowProps {
   isCurrentUser?: boolean
 }
 
-export function RankingRow({ position, avatarUrl, name, elo, wins, losses, change, isCurrentUser = false }: RankingRowProps) {
+export function RankingRow({ playerId, position, avatarUrl, name, elo, wins, losses, change, isCurrentUser = false }: RankingRowProps) {
   const positionDisplay = (pos: number) => {
     if (pos === 1) return '🥇'
     if (pos === 2) return '🥈'
@@ -137,15 +148,23 @@ export function RankingRow({ position, avatarUrl, name, elo, wins, losses, chang
       </div>
 
       {/* Avatar */}
-      <PlayerAvatar
-        name={name}
-        avatarUrl={avatarUrl}
-        size="sm"
-      />
+      {playerId ? (
+        <Link href={`/players/${playerId}`}>
+          <PlayerAvatar name={name} avatarUrl={avatarUrl} size="sm" className="hover:opacity-80 transition-opacity" />
+        </Link>
+      ) : (
+        <PlayerAvatar name={name} avatarUrl={avatarUrl} size="sm" />
+      )}
 
       {/* Info */}
       <div className="flex-1 min-w-0">
-        <p className="font-semibold text-foreground truncate">{name}</p>
+        {playerId ? (
+          <Link href={`/players/${playerId}`}>
+            <p className="font-semibold text-foreground truncate hover:text-accent-primary transition-colors">{name}</p>
+          </Link>
+        ) : (
+          <p className="font-semibold text-foreground truncate">{name}</p>
+        )}
         <p className="text-xs text-text-muted">{wins}V — {losses}D</p>
       </div>
 

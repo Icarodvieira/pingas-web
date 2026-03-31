@@ -16,6 +16,7 @@ type GroupData = {
 }
 
 type RankingRowData = {
+  playerId?: number
   position: number | null
   name: string
   avatarUrl?: string
@@ -49,6 +50,7 @@ function mapRankingRow(row: any, index: number, currentUserId?: number): Ranking
   if (!name) return null
 
   return {
+    playerId: typeof playerId === 'number' ? playerId : undefined,
     position: row?.position ?? null,
     name,
     avatarUrl: player?.avatarUrl ?? row?.avatarUrl,
@@ -173,6 +175,7 @@ export default function GroupRankingPage() {
               .map((row) => (
                 <RankingRow
                   key={row.position}
+                  playerId={row.playerId}
                   position={row.position!}
                   name={row.name}
                   avatarUrl={row.avatarUrl}
@@ -193,6 +196,7 @@ export default function GroupRankingPage() {
                   .map((row) => (
                     <CalibrationRow
                       key={row.name}
+                      playerId={row.playerId}
                       name={row.name}
                       avatarUrl={row.avatarUrl}
                       gamesPlayed={row.gamesPlayed}
